@@ -1,0 +1,14 @@
+# Ignore files that shouldn't be copied to Docker image
+.git
+.gitignore
+README.md
+DEPLOYMENT.md
+RENDER_DEPLOY.md
+.env
+.env.example
+node_modules
+*.log
+.DS_Store
+Thumbs.db
+.vscode
+.idea
