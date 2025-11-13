@@ -20,10 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_
     
     if ($pet) {
         if ($action === 'mark_lost') {
-            $stmt = $pdo->prepare("UPDATE pets SET status = 'lost', lost_since = NOW() WHERE pet_id = ?");
+            $stmt = $pdo->prepare("UPDATE pets SET status = 'lost', updated_at = CURRENT_TIMESTAMP WHERE pet_id = ?");
             $stmt->execute([$pet_id]);
         } elseif ($action === 'mark_found') {
-            $stmt = $pdo->prepare("UPDATE pets SET status = 'safe', lost_since = NULL WHERE pet_id = ?");
+            $stmt = $pdo->prepare("UPDATE pets SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE pet_id = ?");
             $stmt->execute([$pet_id]);
         }
         
@@ -42,19 +42,19 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM pets WHERE owner_id = ? AND status =
 $stmt->execute([$_SESSION['owner_id']]);
 $lostPets = $stmt->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM scans WHERE pet_id IN (SELECT pet_id FROM pets WHERE owner_id = ?) AND scanned_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM scans WHERE pet_id IN (SELECT pet_id FROM pets WHERE owner_id = ?) AND scanned_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'");
 $stmt->execute([$_SESSION['owner_id']]);
 $recentScans = $stmt->fetchColumn();
 
 // Get recent scans with details
-$stmt = $pdo->prepare("SELECT s.scanned_at, p.name as pet_name, p.type, p.breed, p.status FROM scans s JOIN pets p ON s.pet_id = p.pet_id WHERE p.owner_id = ? ORDER BY s.scanned_at DESC LIMIT 5");
+$stmt = $pdo->prepare("SELECT s.scanned_at, p.name as pet_name, p.species, p.breed, p.status FROM scans s JOIN pets p ON s.pet_id = p.pet_id WHERE p.owner_id = ? ORDER BY s.scanned_at DESC LIMIT 5");
 $stmt->execute([$_SESSION['owner_id']]);
 $recentScanDetails = $stmt->fetchAll();
 
 // Get pets with their status
 $stmt = $pdo->prepare("
     SELECT p.*, 
-           (SELECT COUNT(*) FROM scans WHERE pet_id = p.pet_id AND scanned_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as recent_scans,
+           (SELECT COUNT(*) FROM scans WHERE pet_id = p.pet_id AND scanned_at >= CURRENT_TIMESTAMP - INTERVAL '7 days') as recent_scans,
            (SELECT MAX(scanned_at) FROM scans WHERE pet_id = p.pet_id) as last_seen
     FROM pets p 
     WHERE p.owner_id = ? 
