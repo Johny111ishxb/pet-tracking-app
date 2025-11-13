@@ -116,18 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $im = (int)$age_months;
         if ($iy > 0) {
             $age = $iy;
-            $age_unit = 'years';
         } elseif ($im > 0) {
             $age = $im;
-            $age_unit = 'months';
         } else {
             $age = null;
-            $age_unit = 'years';
         }
 
         try {
             $owner_id = $_SESSION['owner_id'];
-            $stmt = $pdo->prepare("INSERT INTO pets (owner_id, name, type, breed, color, age, age_unit, gender, photo, status, date_added) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'safe', NOW())");
+            $stmt = $pdo->prepare("INSERT INTO pets (owner_id, name, species, breed, color, age, gender, photo, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)");
             $stmt->execute([
                 $owner_id,
                 $name,
@@ -135,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $breed ? $breed : null,
                 $color ? $color : null,
                 $age,
-                $age_unit,
                 $gender ? $gender : null,
                 $photo_filename
             ]);
