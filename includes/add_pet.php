@@ -123,8 +123,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         try {
+            // Generate a unique QR token first (required for NOT NULL constraint)
+            $maxAttempts = 5;
+            $qr_token = null;
+            for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+                $candidate = bin2hex(random_bytes(10));
+                $check = $pdo->prepare("SELECT COUNT(*) FROM pets WHERE qr_token = ?");
+                $check->execute([$candidate]);
+                if ($check->fetchColumn() == 0) {
+                    $qr_token = $candidate;
+                    break;
+                }
+            }
+
+            if (!$qr_token) {
+                throw new Exception("Failed to generate unique QR token");
+            }
+
             $owner_id = $_SESSION['owner_id'];
-            $stmt = $pdo->prepare("INSERT INTO pets (owner_id, name, species, breed, color, age, gender, photo, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)");
+            $stmt = $pdo->prepare("INSERT INTO pets (owner_id, name, species, breed, color, age, gender, photo, qr_token, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)");
             $stmt->execute([
                 $owner_id,
                 $name,
@@ -133,24 +150,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $color ? $color : null,
                 $age,
                 $gender ? $gender : null,
-                $photo_filename
+                $photo_filename,
+                $qr_token
             ]);
 
             // Get inserted pet id
             $pet_id = $pdo->lastInsertId();
-
-            // Generate a unique QR token and attempt to save a PNG under qr/
-            $maxAttempts = 5;
-            $qr_token = null;
-            for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
-                $candidate = bin2hex(random_bytes(10));
-                $check = $pdo->prepare("SELECT COUNT(*) FROM pets WHERE qr_code = ?");
-                $check->execute([$candidate]);
-                if ($check->fetchColumn() == 0) {
-                    $qr_token = $candidate;
-                    break;
-                }
-            }
 
             if ($qr_token) {
                 // Build the URL that will be embedded in the QR code — compute base dynamically
@@ -165,9 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $qrInfo = ensure_qr_png($qr_token, $qr_url, 8);
                 $saved = $qrInfo['saved'];
 
-                // Update the pet record with the qr_code token regardless of whether PNG was saved
-                $update = $pdo->prepare("UPDATE pets SET qr_code = ? WHERE pet_id = ?");
-                $update->execute([$qr_token, $pet_id]);
+                // QR token is already included in the INSERT, no need to UPDATE
 
                 // Prepare JSON-friendly info
                 $qr_local_path = 'qr/' . $qr_token . '.png';
