@@ -40,8 +40,20 @@ try {
     // Always use PostgreSQL for Render deployment (this file is only used on Render)
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password, $options);
     
-    // Test connection by checking if owners table exists
-    $pdo->query("SELECT 1 FROM owners LIMIT 1");
+    // Only test table existence if not running migration
+    if (!isset($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], 'migrate.php') === false) {
+        try {
+            // Test connection by checking if owners table exists
+            $pdo->query("SELECT 1 FROM owners LIMIT 1");
+        } catch (PDOException $table_error) {
+            // Table doesn't exist yet - this is normal for fresh install
+            if (strpos($table_error->getMessage(), '42P01') !== false) {
+                // Continue without error - tables will be created by migration
+            } else {
+                throw $table_error;
+            }
+        }
+    }
     
 } catch(PDOException $e) {
     $error_message = $e->getMessage();
