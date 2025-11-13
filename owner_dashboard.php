@@ -6,8 +6,7 @@ if (!isset($_SESSION['owner_id'])) {
     exit();
 }
 
-// FIXED PATH: Remove the ../ since we're in root folder
-require_once 'db/db_connect.php';
+require_once 'db_auto_include.php';
 
 // Handle pet status updates
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_POST['pet_id'])) {
