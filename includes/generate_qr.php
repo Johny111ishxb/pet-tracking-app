@@ -26,13 +26,13 @@ try {
         exit();
     }
 
-    // Ensure pet has a qr_code token. If not, generate and store one.
-    if (empty($pet['qr_code'])) {
+    // Ensure pet has a qr_token. If not, generate and store one.
+    if (empty($pet['qr_token'])) {
         $maxAttempts = 5;
         $qr_token = null;
         for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
             $candidate = bin2hex(random_bytes(10));
-            $check = $pdo->prepare("SELECT COUNT(*) FROM pets WHERE qr_code = ?");
+            $check = $pdo->prepare("SELECT COUNT(*) FROM pets WHERE qr_token = ?");
             $check->execute([$candidate]);
             if ($check->fetchColumn() == 0) {
                 $qr_token = $candidate;
@@ -41,9 +41,9 @@ try {
         }
 
         if ($qr_token) {
-            $up = $pdo->prepare("UPDATE pets SET qr_code = ? WHERE pet_id = ?");
+            $up = $pdo->prepare("UPDATE pets SET qr_token = ? WHERE pet_id = ?");
             $up->execute([$qr_token, $pet['pet_id']]);
-            $pet['qr_code'] = $qr_token;
+            $pet['qr_token'] = $qr_token;
         }
     }
 
@@ -55,11 +55,11 @@ try {
     $scriptDir = dirname($_SERVER['SCRIPT_NAME']); // e.g. /pettracking/includes
     $appBase = preg_replace('#/includes$#', '', $scriptDir);
     if ($appBase === null) { $appBase = ''; }
-    $qr_url = $scheme . '://' . $host . $appBase . '/includes/pet_info.php?token=' . urlencode($pet['qr_code']);
+    $qr_url = $scheme . '://' . $host . $appBase . '/includes/pet_info.php?token=' . urlencode($pet['qr_token']);
 
     // Use centralized helper for QR generation
     require_once __DIR__ . '/qr_helper.php';
-    $qrInfo = ensure_qr_png($pet['qr_code'], $qr_url, 8);
+    $qrInfo = ensure_qr_png($pet['qr_token'], $qr_url, 8);
     $localQrFile = $qrInfo['local_file'];
     $generated = $qrInfo['saved'];
 

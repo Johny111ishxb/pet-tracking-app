@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $host = $_SERVER['HTTP_HOST'];
                 $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
                 $base = $scriptDir === '/' || $scriptDir === '\\' ? '' : $scriptDir;
-                $qr_url = $scheme . '://' . $host . $base . '/pet_info.php?token=' . $qr_token;
+                $qr_url = $scheme . '://' . $host . $base . '/includes/pet_info.php?token=' . $qr_token;
 
                 // Ensure QR PNG exists using centralized helper
                 require_once __DIR__ . '/qr_helper.php'; // Corrected path
