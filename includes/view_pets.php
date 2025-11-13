@@ -21,7 +21,7 @@ try {
             FROM scans
         ) s ON p.pet_id = s.pet_id AND s.rn = 1
         WHERE p.owner_id = ?
-        ORDER BY p.status DESC, p.date_added DESC
+        ORDER BY p.status DESC, p.created_at DESC
     ");
     $stmt->execute([$owner_id]);
     $pets = $stmt->fetchAll();
@@ -573,13 +573,13 @@ function getAgeUnit($pet) {
                             <?php if (!empty($pet['photo']) && file_exists('../uploads/' . $pet['photo'])): ?>
                                 <img src="../uploads/<?= htmlspecialchars($pet['photo']) ?>" alt="<?= htmlspecialchars($pet['name']) ?>">
                             <?php else: ?>
-                                <?= $pet['type'] == 'Dog' ? '🐕' : ($pet['type'] == 'Cat' ? '🐈' : '🐾') ?>
+                                <?= $pet['species'] == 'Dog' ? '🐕' : ($pet['species'] == 'Cat' ? '🐈' : '🐾') ?>
                             <?php endif; ?>
                         </div>
                         <div class="pet-info">
                             <div class="pet-name"><?= htmlspecialchars($pet['name']) ?></div>
                             <div class="pet-details">
-                                <?= htmlspecialchars($pet['type']) ?> • 
+                                <?= htmlspecialchars($pet['species']) ?> • 
                                 <?= htmlspecialchars(getField($pet, 'breed', 'Mixed')) ?> • 
                                 <?= formatAge(getField($pet, 'age'), getAgeUnit($pet)) ?>
                             </div>
@@ -613,12 +613,12 @@ function getAgeUnit($pet) {
 
                         <!-- QR CODE -->
                         <div class="qr-section">
-                            <?php if (!empty($pet['qr_code']) && file_exists("../qr/{$pet['qr_code']}.png")): ?>
-                                <img src="../qr/<?= htmlspecialchars($pet['qr_code']) ?>.png" alt="QR Code" class="qr-image">
+                            <?php if (!empty($pet['qr_token']) && file_exists("../qr/{$pet['qr_token']}.png")): ?>
+                                <img src="../qr/<?= htmlspecialchars($pet['qr_token']) ?>.png" alt="QR Code" class="qr-image">
                             <?php else: ?>
                                 <div style="font-size: 32px; margin-bottom: 10px;">📱</div>
                             <?php endif; ?>
-                            <div class="qr-token">ID: <?= htmlspecialchars(substr($pet['qr_code'] ?? 'NONE', 0, 8)) ?>...</div>
+                            <div class="qr-token">ID: <?= htmlspecialchars(substr($pet['qr_token'] ?? 'NONE', 0, 8)) ?>...</div>
                         </div>
 
                         <!-- ACTION BUTTONS -->

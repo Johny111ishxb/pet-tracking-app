@@ -31,14 +31,14 @@ try {
         SELECT p.*, o.name as owner_name, o.phone as owner_phone, o.email as owner_email 
         FROM pets p 
         LEFT JOIN owners o ON p.owner_id = o.owner_id 
-        WHERE p.qr_code = ?
+        WHERE p.qr_token = ?
     ");
     $stmt->execute([$token]);
     $pet = $stmt->fetch();
 
     if (!$pet) {
         die("Pet not found. This QR code may be invalid or the pet has been removed.");
-    }else if($pet['status'] == "safe"){
+    }else if($pet['status'] == "active"){
         header("Location: qr_inactive.php");
         exit();
     }
@@ -88,18 +88,19 @@ try {
             $lat = floatval($_GET['lat']);
             $lng = floatval($_GET['lng']);
             
+            $location_info = "Lat: $lat, Lng: $lng, Contact: $contact";
             $stmt = $pdo->prepare("
-                INSERT INTO scans (pet_id, scanner_info, location_lat, location_lng) 
-                VALUES (?, ?, ?, ?)
+                INSERT INTO scans (pet_id, location, scanner_ip) 
+                VALUES (?, ?, ?)
             ");
-            $stmt->execute([$pet['pet_id'], $name, $lat, $lng]);
+            $stmt->execute([$pet['pet_id'], $location_info, $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
         } else { 
             // Record scan without location
             $stmt = $pdo->prepare("
-                INSERT INTO scans (pet_id, scanner_info) 
-                VALUES (?, ?)
+                INSERT INTO scans (pet_id, location, scanner_ip) 
+                VALUES (?, ?, ?)
             ");
-            $stmt->execute([$pet['pet_id'], $name]);
+            $stmt->execute([$pet['pet_id'], "Contact: $contact", $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
         }
 
 

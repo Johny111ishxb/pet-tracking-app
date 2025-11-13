@@ -22,10 +22,10 @@ $scanStats = $stmt->fetchAll();
 
 // Get detailed scan history for the last 30 days
 $stmt = $pdo->prepare("
-    SELECT p.name as pet_name, s.scanned_at, s.location_lat, s.location_lng
+    SELECT p.name as pet_name, s.scanned_at, s.location, s.scanner_ip
     FROM scans s 
     JOIN pets p ON s.pet_id = p.pet_id 
-    WHERE p.owner_id = ? AND s.scanned_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    WHERE p.owner_id = ? AND s.scanned_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
     ORDER BY s.scanned_at DESC
 ");
 $stmt->execute([$_SESSION['owner_id']]);
@@ -34,12 +34,12 @@ $recentScans = $stmt->fetchAll();
 // Get monthly scan statistics
 $stmt = $pdo->prepare("
     SELECT 
-        DATE_FORMAT(s.scanned_at, '%Y-%m') as month,
+        TO_CHAR(s.scanned_at, 'YYYY-MM') as month,
         COUNT(*) as scan_count
     FROM scans s 
     JOIN pets p ON s.pet_id = p.pet_id 
     WHERE p.owner_id = ? 
-    GROUP BY DATE_FORMAT(s.scanned_at, '%Y-%m')
+    GROUP BY TO_CHAR(s.scanned_at, 'YYYY-MM')
     ORDER BY month DESC
     LIMIT 6
 ");
@@ -496,9 +496,9 @@ foreach ($scanStats as $stat) {
                                 <div class="scan-time">
                                     <?= date('M j, Y g:i A', strtotime($scan['scanned_at'])) ?>
                                 </div>
-                                <?php if ($scan['location_lat'] && $scan['location_lng']): ?>
+                                <?php if ($scan['location']): ?>
                                     <div class="scan-location">
-                                        📍 Lat: <?= number_format($scan['location_lat'], 4) ?>, Lng: <?= number_format($scan['location_lng'], 4) ?>
+                                        📍 <?= htmlspecialchars($scan['location']) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
