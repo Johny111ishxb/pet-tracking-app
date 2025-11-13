@@ -10,16 +10,18 @@ if (getenv('DEBUG_MODE') === '1') {
     ini_set('display_errors', 0);
 }
 
-// Get database configuration from environment variables
-$host = getenv('DB_HOST') ?: 'localhost';
-$dbname = getenv('DB_NAME') ?: 'pawsitive_patrol';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS') ?: '';
+// Get database configuration from environment variables (try multiple methods)
+$host = getenv('DB_HOST') ?: $_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? 'localhost';
+$dbname = getenv('DB_NAME') ?: $_ENV['DB_NAME'] ?? $_SERVER['DB_NAME'] ?? 'pawsitive_patrol';
+$username = getenv('DB_USER') ?: $_ENV['DB_USER'] ?? $_SERVER['DB_USER'] ?? 'root';
+$password = getenv('DB_PASS') ?: $_ENV['DB_PASS'] ?? $_SERVER['DB_PASS'] ?? '';
+$port = 5432; // Default PostgreSQL port
 
 // Render provides DATABASE_URL for PostgreSQL
-if (getenv('DATABASE_URL')) {
+$database_url = getenv('DATABASE_URL') ?: $_ENV['DATABASE_URL'] ?? $_SERVER['DATABASE_URL'] ?? null;
+if ($database_url) {
     // Parse DATABASE_URL if provided (format: postgres://user:pass@host:port/db)
-    $db_url = parse_url(getenv('DATABASE_URL'));
+    $db_url = parse_url($database_url);
     $host = $db_url['host'];
     $dbname = ltrim($db_url['path'], '/');
     $username = $db_url['user'];
@@ -35,15 +37,8 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false
     ];
     
-    // Use PostgreSQL connection for Render, MySQL for local
-    if (getenv('DATABASE_URL') || getenv('DB_HOST')) {
-        // PostgreSQL connection for Render
-        $port = $port ?? 5432;
-        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password, $options);
-    } else {
-        // MySQL connection for local development
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, $options);
-    }
+    // Always use PostgreSQL for Render deployment (this file is only used on Render)
+    $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password, $options);
     
     // Test connection by checking if owners table exists
     $pdo->query("SELECT 1 FROM owners LIMIT 1");
