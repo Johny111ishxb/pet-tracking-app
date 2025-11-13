@@ -776,21 +776,37 @@ try {
                         <div class="scan-item <?= $index === 0 ? 'latest' : '' ?>">
                             <div class="scan-header">
                                 <div class="scan-scanner">
-                                    <?= $index === 0 ? '<strong>Latest</strong><br>' : '' ?>
-                                    <?= htmlspecialchars($scan['scanner_info'] ?? 'Anonymous Scanner') ?>
+                                    <?php 
+                                    // Extract contact info from location field if it contains "Contact:"
+                                    $scanner_info = 'Anonymous Scanner';
+                                    if (!empty($scan['location']) && strpos($scan['location'], 'Contact:') !== false) {
+                                        $parts = explode('Contact:', $scan['location']);
+                                        if (count($parts) > 1) {
+                                            $scanner_info = 'Scanner: ' . trim($parts[1]);
+                                        }
+                                    }
+                                    echo htmlspecialchars($scanner_info);
+                                    ?>
                                 </div>
                                 <div class="scan-time"><?= date('m/d/Y, g:i:s A', strtotime($scan['scanned_at'])) ?></div>
                             </div>
-                            <?php if ($scan['location_lat'] && $scan['location_lng']): ?>
+                            <?php if (!empty($scan['location'])): ?>
                                 <div class="scan-location">
-                                    📍 Lat: <?= $scan['location_lat'] ?>, Lng: <?= $scan['location_lng'] ?>
+                                    📍 <?= htmlspecialchars($scan['location']) ?>
                                 </div>
+                                <?php 
+                                // Check if location contains coordinates for map link
+                                if (preg_match('/Lat:\s*([-\d.]+),\s*Lng:\s*([-\d.]+)/', $scan['location'], $matches)) {
+                                    $lat = $matches[1];
+                                    $lng = $matches[2];
+                                ?>
                                 <div class="scan-actions">
-                                    <a href="https://maps.google.com/?q=<?= $scan['location_lat'] ?>,<?= $scan['location_lng'] ?>" 
+                                    <a href="https://maps.google.com/?q=<?= $lat ?>,<?= $lng ?>" 
                                        target="_blank" class="map-link">
                                         <i class="fas fa-external-link-alt"></i> View on Map
                                     </a>
                                 </div>
+                                <?php } ?>
                             <?php else: ?>
                                 <div class="scan-location">📍 Location not recorded</div>
                             <?php endif; ?>
@@ -858,8 +874,8 @@ try {
                 </div>
                 
                 <div class="qr-section">
-                    <?php if (!empty($pet['qr_code']) && file_exists("../qr/{$pet['qr_code']}.png")): ?>
-                        <img src="../qr/<?= htmlspecialchars($pet['qr_code']) ?>.png" 
+                    <?php if (!empty($pet['qr_token']) && file_exists("../qr/{$pet['qr_token']}.png")): ?>
+                        <img src="../qr/<?= htmlspecialchars($pet['qr_token']) ?>.png" 
                              alt="QR Code for <?= htmlspecialchars($pet['name']) ?>" 
                              class="qr-image">
                     <?php else: ?>
@@ -878,8 +894,8 @@ try {
                         and show <?= htmlspecialchars($pet['name']) ?>'s information.
                     </div>
                     
-                    <?php if (!empty($pet['qr_code']) && file_exists("../qr/{$pet['qr_code']}.png")): ?>
-                        <a href="../qr/<?= htmlspecialchars($pet['qr_code']) ?>.png" 
+                    <?php if (!empty($pet['qr_token']) && file_exists("../qr/{$pet['qr_token']}.png")): ?>
+                        <a href="../qr/<?= htmlspecialchars($pet['qr_token']) ?>.png" 
                            download="<?= htmlspecialchars($pet['name']) ?>_qrcode.png" 
                            class="btn download-btn">
                             <i class="fas fa-download"></i> Download High-Res QR Code
