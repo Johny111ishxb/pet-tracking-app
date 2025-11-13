@@ -1,14 +1,8 @@
 services:
   - type: web
     name: pet-tracking-app
-    env: php
-    buildCommand: |
-      # Install dependencies and setup directories
-      mkdir -p uploads qr_codes
-      chmod 755 uploads qr_codes
-    startCommand: |
-      # Start PHP built-in server
-      php -S 0.0.0.0:$PORT -t .
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: DB_HOST
         fromDatabase:

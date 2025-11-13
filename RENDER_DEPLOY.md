@@ -21,7 +21,7 @@
 
 3. **Push to GitHub**:
    ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/pet-tracking-app.git
+   git remote add origin https://github.com/Johny111ishxb/pet-tracking-app
    git branch -M main
    git push -u origin main
    ```
@@ -49,15 +49,9 @@
 4. Configure:
    - **Name**: `pet-tracking-app`
    - **Root Directory**: Leave empty (if code is in root)
-   - **Environment**: `PHP`
-   - **Build Command**: 
-     ```bash
-     mkdir -p uploads qr_codes && chmod 755 uploads qr_codes
-     ```
-   - **Start Command**: 
-     ```bash
-     php -S 0.0.0.0:$PORT -t .
-     ```
+   - **Environment**: `Docker`
+   - **Dockerfile Path**: `./Dockerfile`
+   - Leave Build Command and Start Command empty (Docker handles this)
 
 ### Step 5: Configure Environment Variables
 In the web service settings, add these environment variables:

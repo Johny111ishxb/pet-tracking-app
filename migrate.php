@@ -7,8 +7,12 @@ require_once 'db/db_connect_render.php';
 echo "<h2>🚀 Database Migration for Pet Tracking App</h2>";
 
 try {
-    // Read and execute the SQL schema
-    $sql_file = __DIR__ . '/db/pawsitive_patrol.sql';
+    // Use PostgreSQL schema for Render, MySQL for local
+    if (getenv('DATABASE_URL') || getenv('DB_HOST')) {
+        $sql_file = __DIR__ . '/db/pawsitive_patrol_postgres.sql';
+    } else {
+        $sql_file = __DIR__ . '/db/pawsitive_patrol.sql';
+    }
     
     if (!file_exists($sql_file)) {
         throw new Exception("SQL file not found: $sql_file");

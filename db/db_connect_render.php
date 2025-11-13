@@ -16,14 +16,15 @@ $dbname = getenv('DB_NAME') ?: 'pawsitive_patrol';
 $username = getenv('DB_USER') ?: 'root';
 $password = getenv('DB_PASS') ?: '';
 
-// Render provides DATABASE_URL for PostgreSQL, but we'll use individual vars for MySQL
+// Render provides DATABASE_URL for PostgreSQL
 if (getenv('DATABASE_URL')) {
-    // Parse DATABASE_URL if provided (format: mysql://user:pass@host:port/db)
+    // Parse DATABASE_URL if provided (format: postgres://user:pass@host:port/db)
     $db_url = parse_url(getenv('DATABASE_URL'));
     $host = $db_url['host'];
     $dbname = ltrim($db_url['path'], '/');
     $username = $db_url['user'];
     $password = $db_url['pass'];
+    $port = $db_url['port'] ?? 5432;
 }
 
 try {
@@ -31,11 +32,18 @@ try {
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+        PDO::ATTR_EMULATE_PREPARES => false
     ];
     
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, $options);
+    // Use PostgreSQL connection for Render, MySQL for local
+    if (getenv('DATABASE_URL') || getenv('DB_HOST')) {
+        // PostgreSQL connection for Render
+        $port = $port ?? 5432;
+        $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $username, $password, $options);
+    } else {
+        // MySQL connection for local development
+        $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, $options);
+    }
     
     // Test connection by checking if owners table exists
     $pdo->query("SELECT 1 FROM owners LIMIT 1");
