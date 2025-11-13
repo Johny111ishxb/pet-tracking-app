@@ -84,9 +84,14 @@ try {
     }else{
         $name = $_POST['name'];
         $contact = $_POST['contact'];
-        if (isset($_GET['lat']) && isset($_GET['lng'])) {
-            $lat = floatval($_GET['lat']);
-            $lng = floatval($_GET['lng']);
+        
+        // Check for location data in both POST and GET
+        $lat = $_POST['lat'] ?? $_GET['lat'] ?? null;
+        $lng = $_POST['lng'] ?? $_GET['lng'] ?? null;
+        
+        if ($lat && $lng) {
+            $lat = floatval($lat);
+            $lng = floatval($lng);
             
             $location_info = "Lat: $lat, Lng: $lng, Contact: $contact";
             $stmt = $pdo->prepare("
@@ -515,6 +520,34 @@ try {
             border-top: 1px solid #e0e0e0;
         }
 
+        .scan-message {
+            text-align: center;
+            padding: 20px;
+            background: #e8f5e9;
+            color: #2d5016;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 600;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .location-status {
+            text-align: center;
+            padding: 15px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 600;
+            border: 1px solid #bbdefb;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -692,6 +725,10 @@ try {
             <div class="scan-message">
                 <i class="fas fa-qrcode"></i> This scan has been recorded to help locate the pet if needed.
             </div>
+            
+            <div id="location-status" class="location-status" style="display: none;">
+                <i class="fas fa-map-marker-alt"></i> <span id="location-text">Getting location...</span>
+            </div>
         </div>
     </div>
 
@@ -742,19 +779,70 @@ try {
 
         
         // Try to get location for scan recording
+        let userLocation = null;
+        const locationStatus = document.getElementById('location-status');
+        const locationText = document.getElementById('location-text');
+        
         if (navigator.geolocation) {
+            locationStatus.style.display = 'block';
+            locationText.textContent = 'Getting location...';
+            
             navigator.geolocation.getCurrentPosition(
                 function(position) {
-                    // Add location to URL and refresh to record scan with location
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    console.log('Location captured:', userLocation);
+                    
+                    // Update status
+                    locationText.innerHTML = '<i class="fas fa-check-circle" style="color: green;"></i> Location captured successfully';
+                    
+                    // Add location to URL for reference
                     const url = new URL(window.location.href);
                     url.searchParams.set('lat', position.coords.latitude);
                     url.searchParams.set('lng', position.coords.longitude);
                     window.history.replaceState({}, '', url);
+                    
+                    // Add hidden fields to form if it exists
+                    const form = document.querySelector('form');
+                    if (form && !document.getElementById('lat-input')) {
+                        const latInput = document.createElement('input');
+                        latInput.type = 'hidden';
+                        latInput.name = 'lat';
+                        latInput.id = 'lat-input';
+                        latInput.value = position.coords.latitude;
+                        form.appendChild(latInput);
+                        
+                        const lngInput = document.createElement('input');
+                        lngInput.type = 'hidden';
+                        lngInput.name = 'lng';
+                        lngInput.id = 'lng-input';
+                        lngInput.value = position.coords.longitude;
+                        form.appendChild(lngInput);
+                    }
+                    
+                    // Hide status after 3 seconds
+                    setTimeout(() => {
+                        locationStatus.style.display = 'none';
+                    }, 3000);
                 },
                 function(error) {
-                    console.log('Location access denied or unavailable');
+                    console.log('Location access denied or unavailable:', error.message);
+                    locationText.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: orange;"></i> Location not available - will record without location';
+                    
+                    // Hide status after 5 seconds
+                    setTimeout(() => {
+                        locationStatus.style.display = 'none';
+                    }, 5000);
                 }
             );
+        } else {
+            locationStatus.style.display = 'block';
+            locationText.innerHTML = '<i class="fas fa-times-circle" style="color: red;"></i> Geolocation not supported';
+            setTimeout(() => {
+                locationStatus.style.display = 'none';
+            }, 5000);
         }
     </script>
 </body>
