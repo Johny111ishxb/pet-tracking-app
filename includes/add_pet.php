@@ -5,7 +5,7 @@ if (!isset($_SESSION['owner_id'])) {
     exit();
 }
 
-require_once '../db/db_connect.php';
+require_once __DIR__ . '/../db_auto_include.php';
 
 $name = $type = $breed = $color = $age_years = $age_months = $gender = '';
 $errors = [];

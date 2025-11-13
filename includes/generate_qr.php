@@ -5,7 +5,7 @@ if (!isset($_SESSION['owner_id'])) {
     exit();
 }
 
-require_once '../db/db_connect.php'; // ✅ Fixed path
+require_once __DIR__ . '/../db_auto_include.php';
 
 // Check if pet ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {

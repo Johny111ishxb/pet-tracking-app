@@ -1,6 +1,6 @@
 <?php
 // pet_info.php - Public page for QR code scanning
-require_once '../db/db_connect.php';
+require_once __DIR__ . '/../db_auto_include.php';
 session_start();
 
 if (isset($_SESSION['toast'])) {

@@ -6,7 +6,7 @@ if (!isset($_SESSION['owner_id'])) {
     exit();
 }
 
-require_once(__DIR__ . '/../db/db_connect.php');
+require_once(__DIR__ . '/../db_auto_include.php');
 $owner_id = $_SESSION['owner_id'];
 
 // Get current user info
