@@ -1,0 +1,33 @@
+# Ignore sensitive files
+.env
+config.php
+
+# Ignore upload directories (they should be created on server)
+uploads/*
+qr_codes/*
+!uploads/.gitkeep
+!qr_codes/.gitkeep
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+error.log
+access.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore database backups
+*.sql.backup
+*.sql.bak
+
+# Ignore migration marker
+.migrated
