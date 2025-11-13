@@ -105,8 +105,8 @@ try {
 
 
 
-        $stmt = $pdo->prepare("INSERT INTO `found_reports`
-        (`pet_id`, `finder_name`, `finder_contact`,`message`, `attached_photo`) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO found_reports
+        (pet_id, finder_name, finder_contact, message, attached_photo) VALUES (?, ?, ?, ?, ?)");
 
         $stmt->execute([$pet['pet_id'], $name, $contact ,$_POST['message-input'], $photo_filename]);
         

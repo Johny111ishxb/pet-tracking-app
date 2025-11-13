@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS found_reports (
   finder_name VARCHAR(100) DEFAULT NULL,
   finder_contact VARCHAR(20) DEFAULT NULL,
   message TEXT DEFAULT NULL,
+  attached_photo VARCHAR(255) DEFAULT NULL,
   reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
