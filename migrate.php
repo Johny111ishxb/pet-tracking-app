@@ -20,13 +20,27 @@ try {
     
     $sql = file_get_contents($sql_file);
     
-    // Split SQL into individual statements
-    $statements = array_filter(
-        array_map('trim', explode(';', $sql)),
-        function($stmt) {
-            return !empty($stmt) && !preg_match('/^(--|#)/', $stmt);
+    // Split SQL into individual statements - handle multi-statement CREATE TABLE blocks
+    $statements = array();
+    $current_statement = '';
+    $lines = explode("\n", $sql);
+    
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        
+        // Skip comments and empty lines
+        if (empty($trimmed) || preg_match('/^(--|#)/', $trimmed)) {
+            continue;
         }
-    );
+        
+        $current_statement .= $line . "\n";
+        
+        // If line ends with semicolon, it's a complete statement
+        if (substr($trimmed, -1) === ';') {
+            $statements[] = trim($current_statement);
+            $current_statement = '';
+        }
+    }
     
     echo "<p>📁 Found " . count($statements) . " SQL statements to execute...</p>";
     
@@ -37,9 +51,10 @@ try {
             try {
                 $pdo->exec($statement);
                 echo "<p>✅ Statement " . ($i + 1) . " executed successfully</p>";
+                echo "<p><small>" . substr($statement, 0, 100) . "...</small></p>";
             } catch (PDOException $e) {
                 // Ignore "table already exists" errors
-                if (strpos($e->getMessage(), '42S01') === false) {
+                if (strpos($e->getMessage(), '42P01') === false && strpos($e->getMessage(), '42S01') === false) {
                     throw $e;
                 }
                 echo "<p>⚠️ Statement " . ($i + 1) . " skipped (table exists): " . substr($statement, 0, 50) . "...</p>";
