@@ -1,18 +1,7 @@
 -- PostgreSQL version of pawsitive_patrol database schema
 -- Converted from MySQL for Render deployment
 
--- Table structure for table found_reports
-CREATE TABLE IF NOT EXISTS found_reports (
-  report_id SERIAL PRIMARY KEY,
-  pet_id INTEGER DEFAULT NULL,
-  finder_name VARCHAR(100) DEFAULT NULL,
-  finder_contact VARCHAR(20) DEFAULT NULL,
-  message TEXT DEFAULT NULL,
-  attached_photo VARCHAR(255) DEFAULT NULL,
-  reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Table structure for table owners
+-- Table structure for table owners (must be first - other tables reference it)
 CREATE TABLE IF NOT EXISTS owners (
   owner_id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -22,7 +11,7 @@ CREATE TABLE IF NOT EXISTS owners (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table structure for table pets
+-- Table structure for table pets (references owners)
 CREATE TABLE IF NOT EXISTS pets (
   pet_id SERIAL PRIMARY KEY,
   owner_id INTEGER NOT NULL,
@@ -42,7 +31,7 @@ CREATE TABLE IF NOT EXISTS pets (
   FOREIGN KEY (owner_id) REFERENCES owners(owner_id) ON DELETE CASCADE
 );
 
--- Table structure for table scans
+-- Table structure for table scans (references pets)
 CREATE TABLE IF NOT EXISTS scans (
   scan_id SERIAL PRIMARY KEY,
   pet_id INTEGER NOT NULL,
@@ -50,6 +39,17 @@ CREATE TABLE IF NOT EXISTS scans (
   location VARCHAR(255) DEFAULT NULL,
   scanner_ip VARCHAR(45) DEFAULT NULL,
   FOREIGN KEY (pet_id) REFERENCES pets(pet_id) ON DELETE CASCADE
+);
+
+-- Table structure for table found_reports (references pets)
+CREATE TABLE IF NOT EXISTS found_reports (
+  report_id SERIAL PRIMARY KEY,
+  pet_id INTEGER DEFAULT NULL,
+  finder_name VARCHAR(100) DEFAULT NULL,
+  finder_contact VARCHAR(20) DEFAULT NULL,
+  message TEXT DEFAULT NULL,
+  attached_photo VARCHAR(255) DEFAULT NULL,
+  reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
