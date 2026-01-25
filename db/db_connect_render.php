@@ -20,7 +20,7 @@ $port = 5432; // Default PostgreSQL port
 // Render provides DATABASE_URL for PostgreSQL
 $database_url = getenv('DATABASE_URL') ?: $_ENV['DATABASE_URL'] ?? $_SERVER['DATABASE_URL'] ?? null;
 if ($database_url) {
-    // Parse DATABASE_URL if provided (format: postgres://user:pass@host:port/db)
+    // Parse DATABASE_URL if provided (format: postgresql://user:pass@host:port/db or postgres://user:pass@host:port/db)
     $db_url = parse_url($database_url);
     $host = $db_url['host'];
     $dbname = ltrim($db_url['path'], '/');
@@ -69,14 +69,16 @@ try {
     echo "<h3>❌ Database Connection Failed</h3>";
     echo "<p><strong>Error:</strong> " . htmlspecialchars($error_message) . "</p>";
     
-    if (strpos($error_message, '2002') !== false) {
+    if (strpos($error_message, '2002') !== false || strpos($error_message, 'connection') !== false) {
         echo "<p><strong>Solution:</strong> Database server is not reachable.</p>";
-    } elseif (strpos($error_message, '1049') !== false) {
+    } elseif (strpos($error_message, '1049') !== false || strpos($error_message, 'database') !== false) {
         echo "<p><strong>Solution:</strong> Database doesn't exist. Check database name.</p>";
-    } elseif (strpos($error_message, '1045') !== false) {
+    } elseif (strpos($error_message, '1045') !== false || strpos($error_message, 'access') !== false) {
         echo "<p><strong>Solution:</strong> Access denied. Check username and password.</p>";
-    } elseif (strpos($error_message, '42S02') !== false) {
+    } elseif (strpos($error_message, '42S02') !== false || strpos($error_message, '42P01') !== false) {
         echo "<p><strong>Note:</strong> Tables don't exist yet. Run database migration.</p>";
+    } elseif (strpos($error_message, 'driver') !== false) {
+        echo "<p><strong>Solution:</strong> PostgreSQL driver not installed. Contact support.</p>";
     }
     
     echo "<p><strong>Environment Info:</strong></p>";
@@ -85,6 +87,7 @@ try {
     echo "<li>Database: " . htmlspecialchars($dbname) . "</li>";
     echo "<li>Username: " . htmlspecialchars($username) . "</li>";
     echo "<li>Password: " . (empty($password) ? '(empty)' : '***') . "</li>";
+    echo "<li>Port: " . htmlspecialchars($port) . "</li>";
     echo "</ul>";
     echo "</div>";
     
